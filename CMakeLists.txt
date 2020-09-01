@@ -78,7 +78,8 @@ endif (ADDR_TRACE)
 
 target_include_directories(dramsim3 INTERFACE src)
 target_compile_options(dramsim3 PRIVATE -Wall)
-target_link_libraries(dramsim3 PRIVATE inih format)
+target_link_libraries(dramsim3 PRIVATE format)
+target_link_libraries(dramsim3 PUBLIC inih)
 set_target_properties(dramsim3 PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}
     CXX_STANDARD 11
