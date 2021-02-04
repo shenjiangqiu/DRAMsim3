@@ -31,13 +31,16 @@ class SimpleStats {
     void AddValue(const std::string name, const int value);
 
     // Epoch update
-    void PrintEpochStats();
+    void PrintEpochStats(bool cout=false);
 
     // Final statas output
-    void PrintFinalStats();
+    void PrintFinalStats(bool cout=false);
 
     // Reset (usually after one phase of simulation)
     void Reset();
+
+    // 2020.12.28 added by Fuping Niu
+    double RankBackgroundEnergy(int rank);
 
    private:
     using VecStat = std::unordered_map<std::string, std::vector<uint64_t> >;
@@ -61,6 +64,9 @@ class SimpleStats {
 
     const Config& config_;
     int channel_id_;
+
+    // 2020.12.28 added by Fuping Niu
+    std::vector<double> background_energy;
 
     // map names to descriptions
     std::unordered_map<std::string, std::string> header_descs_;

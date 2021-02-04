@@ -55,7 +55,7 @@ if (THERMAL)
     )
 
     target_link_libraries(dramsim3
-        PRIVATE ${SUPERLU} f77blas atlas m ${OpenMP_C_FLAGS}
+        PRIVATE ${SUPERLU} openblas m ${OpenMP_C_FLAGS}
     )
     target_sources(dramsim3
         PRIVATE src/thermal.cc src/sp_ienv.c src/thermal_solver.c
