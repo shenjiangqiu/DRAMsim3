@@ -44,6 +44,7 @@ add_library(dramsim3 STATIC
 if (THERMAL)
     # dependency check
     # sudo apt-get install libatlas-base-dev on ubuntu
+    message("Using thermal")
     find_package(BLAS REQUIRED)
     find_package(OpenMP REQUIRED)
     # YOU need to build superlu on your own. Do the following:
