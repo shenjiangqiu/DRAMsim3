@@ -20,6 +20,7 @@ SimpleStats::SimpleStats(const Config& config, int channel_id)
     : config_(config), channel_id_(channel_id) {
     // counter stats
     InitStat("num_cycles", "counter", "Number of DRAM cycles");
+    InitStat("num_idle_cycles", "counter", "Number of idle DRAM cycles");
     InitStat("epoch_num", "counter", "Number of epochs");
     InitStat("num_reads_done", "counter", "Number of read requests issued");
     InitStat("num_writes_done", "counter", "Number of read requests issued");
@@ -69,6 +70,7 @@ SimpleStats::SimpleStats(const Config& config, int channel_id)
 
     // some irregular stats
     InitStat("average_bandwidth", "calculated", "Average bandwidth");
+    InitStat("average_active_bandwidth", "calculated", "Average active bandwidth");
     InitStat("total_energy", "calculated", "Total energy (pJ)");
     InitStat("average_power", "calculated", "Average power (mW)");
     InitStat("average_read_latency", "calculated",
@@ -393,6 +395,11 @@ void SimpleStats::UpdateEpochStats() {
     double total_time = epoch_counters_["num_cycles"] * config_.tCK;
     double avg_bw = total_reqs * config_.request_size_bytes / total_time;
     calculated_["average_bandwidth"] = avg_bw;
+    total_time = (epoch_counters_["num_reads_done"]-epoch_counters_["num_active_cycles"])
+                 * config_.tCK;
+    avg_bw = total_reqs * config_.request_size_bytes / total_time;
+    calculated_["average_active_bandwidth"] = avg_bw;
+
 
     double total_energy = doubles_["act_energy"] + doubles_["read_energy"] +
                           doubles_["write_energy"] + doubles_["ref_energy"] +
@@ -454,6 +461,11 @@ void SimpleStats::UpdateFinalStats() {
     double total_time = counters_["num_cycles"] * config_.tCK;
     double avg_bw = total_reqs * config_.request_size_bytes / total_time;
     calculated_["average_bandwidth"] = avg_bw;
+    total_time = (counters_["num_active_cycles"]- counters_["num_reads_done"]) 
+                 * config_.tCK;
+    avg_bw = total_reqs * config_.request_size_bytes / total_time;
+    calculated_["average_active_bandwidth"] = avg_bw;
+
 
     double total_energy = doubles_["act_energy"] + doubles_["read_energy"] +
                           doubles_["write_energy"] + doubles_["ref_energy"] +

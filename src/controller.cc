@@ -33,6 +33,7 @@ Controller::Controller(int channel, const Config &config, const Timing &timing)
         read_queue_.reserve(config_.trans_queue_size);
         write_buffer_.reserve(config_.trans_queue_size);
     }
+    
 
 #ifdef CMD_TRACE
     std::string trace_file_name = config_.output_prefix + "ch_" +
@@ -48,9 +49,11 @@ std::pair<uint64_t, int> Controller::ReturnDoneTrans(uint64_t clk) {
         if (clk >= it->complete_cycle) {
             if (it->is_write) {
                 simple_stats_.Increment("num_writes_done");
+                
             } else {
                 simple_stats_.Increment("num_reads_done");
                 simple_stats_.AddValue("read_latency", clk_ - it->added_cycle);
+                
             }
             auto pair = std::make_pair(it->addr, it->is_write);
             it = return_queue_.erase(it);
@@ -145,6 +148,15 @@ void Controller::ClockTick() {
     clk_++;
     cmd_queue_.ClockTick();
     simple_stats_.Increment("num_cycles");
+
+    if( is_unified_queue_ )
+         if( unified_queue_.empty())
+           simple_stats_.Increment("num_idle_cycles");
+    else{
+        if( read_queue_.empty() && write_buffer_.empty())
+          simple_stats_.Increment("num_idle_cycles");
+    } 
+
     return;
 }
 
@@ -293,6 +305,7 @@ void Controller::PrintEpochStats() {
 
 void Controller::PrintFinalStats() {
     simple_stats_.PrintFinalStats();
+    
 
 #ifdef THERMAL
     for (int r = 0; r < config_.ranks; r++) {
