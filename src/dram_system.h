@@ -78,8 +78,9 @@ class IdealDRAMSystem : public BaseDRAMSystem {
                     std::function<void(uint64_t)> read_callback,
                     std::function<void(uint64_t)> write_callback);
     ~IdealDRAMSystem();
-    bool WillAcceptTransaction(uint64_t hex_addr,
-                               bool is_write) const override {
+    bool WillAcceptTransaction(uint64_t ,
+                               bool ) const override {
+        
         return true;
     };
     bool AddTransaction(uint64_t hex_addr, bool is_write) override;

@@ -26,7 +26,7 @@ add_library(json INTERFACE)
 target_include_directories(json INTERFACE ext/headers)
 
 # Main DRAMSim Lib
-add_library(dramsim3 SHARED
+add_library(dramsim3 STATIC
     src/bankstate.cc
     src/channel_state.cc
     src/command_queue.cc
@@ -55,7 +55,7 @@ if (THERMAL)
     )
 
     target_link_libraries(dramsim3
-        PRIVATE ${SUPERLU} f77blas atlas m ${OpenMP_C_FLAGS}
+        PRIVATE ${SUPERLU} openblas m ${OpenMP_C_FLAGS}
     )
     target_sources(dramsim3
         PRIVATE src/thermal.cc src/sp_ienv.c src/thermal_solver.c
@@ -78,7 +78,8 @@ endif (ADDR_TRACE)
 
 target_include_directories(dramsim3 INTERFACE src)
 target_compile_options(dramsim3 PRIVATE -Wall)
-target_link_libraries(dramsim3 PRIVATE inih format)
+target_link_libraries(dramsim3 PRIVATE format)
+target_link_libraries(dramsim3 PUBLIC inih)
 set_target_properties(dramsim3 PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}
     CXX_STANDARD 11
