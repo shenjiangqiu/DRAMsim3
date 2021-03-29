@@ -48,7 +48,7 @@ class BaseDRAMSystem {
 #ifdef THERMAL
     ThermalCalculator thermal_calc_;
 #endif  // THERMAL
-
+    dramsim3::Controller* m;
     uint64_t clk_;
     std::vector<Controller*> ctrls_;
 

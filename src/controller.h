@@ -1,5 +1,5 @@
-#ifndef __CONTROLLER_H
-#define __CONTROLLER_H
+#ifndef DRAM3__CONTROLLER_H
+#define DRAM3__CONTROLLER_H
 
 #include <fstream>
 #include <map>
@@ -71,7 +71,7 @@ class Controller {
     // completed transactions
     std::vector<Transaction> return_queue_;
      
-    int inflight_bank_req[64];
+    std::vector<int> inflight_bank_req=std::vector<int>(64,0);
     int blp;
     uint64_t sum_blp;
     int mlp;

@@ -29,12 +29,15 @@ BaseDRAMSystem::BaseDRAMSystem(Config &config, const std::string &output_dir,
 }
 
 int BaseDRAMSystem::GetChannel(uint64_t hex_addr) const {
+    std::cout<<this<<std::endl;
+
     hex_addr >>= config_.shift_bits;
     return (hex_addr >> config_.ch_pos) & config_.ch_mask;
 }
 
 
 int BaseDRAMSystem::GetBankID(uint64_t hex_addr) const {
+    std::cout<<this<<std::endl;
     std::cout<<config_.shift_bits<<std::endl;
     hex_addr >>= config_.shift_bits;
     int id1 = (hex_addr >> config_.bg_pos) & config_.bg_mask;

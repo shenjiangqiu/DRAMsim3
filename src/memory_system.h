@@ -37,8 +37,8 @@ class MemorySystem {
     // These have to be pointers because Gem5 will try to push this object
     // into container which will invoke a copy constructor, using pointers
     // here is safe
-    Config *config_;
-    BaseDRAMSystem *dram_system_;
+    Config config_;
+    std::unique_ptr<BaseDRAMSystem> dram_system_;
 };
 
 MemorySystem* GetMemorySystem(const std::string &config_file, const std::string &output_dir,
