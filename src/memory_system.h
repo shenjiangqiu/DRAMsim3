@@ -26,9 +26,12 @@ class MemorySystem {
     int GetQueueSize() const;
     void PrintStats() const;
     void ResetStats();
-
+     
     bool WillAcceptTransaction(uint64_t hex_addr, bool is_write) const;
     bool AddTransaction(uint64_t hex_addr, bool is_write);
+
+    int GetChannel( uint64_t hex_addr) const;
+    int GetBankID( uint64_t hex_addr)  const;  
 
    private:
     // These have to be pointers because Gem5 will try to push this object

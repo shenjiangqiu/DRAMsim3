@@ -21,6 +21,9 @@ SimpleStats::SimpleStats(const Config& config, int channel_id)
     // counter stats
     InitStat("num_cycles", "counter", "Number of DRAM cycles");
     InitStat("num_idle_cycles", "counter", "Number of idle DRAM cycles");
+    InitStat("num_active_cycles", "counter", "Number of active DRAM cycles");
+    InitStat("sum_requests", "counter", "Sum of requests");
+    InitStat("sum_blp", "counter", "Sum of BLP");
     InitStat("epoch_num", "counter", "Number of epochs");
     InitStat("num_reads_done", "counter", "Number of read requests issued");
     InitStat("num_writes_done", "counter", "Number of read requests issued");
@@ -100,7 +103,7 @@ std::string SimpleStats::GetTextHeader(bool is_final) const {
     return header;
 }
 
-void SimpleStats::PrintEpochStats() {
+void SimpleStats::PrintEpochStats( bool cout) {
     UpdateEpochStats();
     if (config_.output_level >= 1) {
         std::ofstream j_out(config_.json_epoch_name, std::ofstream::app);
@@ -116,9 +119,10 @@ void SimpleStats::PrintEpochStats() {
     print_pairs_.clear();
 }
 
-void SimpleStats::PrintFinalStats() {
+void SimpleStats::PrintFinalStats( bool cout) {
     UpdateFinalStats();
-
+    unsigned long long  active_cycles, cycles;
+    unsigned long long  sum_requests, sum_blp;
     if (config_.output_level >= 0) {
         std::ofstream j_out(config_.json_stats_name, std::ofstream::app);
         j_out << "\"" << std::to_string(channel_id_) << "\":";
@@ -129,11 +133,41 @@ void SimpleStats::PrintFinalStats() {
         // HACK: overwrite existing file if this is first channel
         auto perm = channel_id_ == 0 ? std::ofstream::out : std::ofstream::app;
         std::ofstream txt_out(config_.txt_stats_name, perm);
-        txt_out << GetTextHeader(true);
+        
+        //std::cout <<"channel "<< channel_id_<<"  ";
         for (const auto& it : print_pairs_) {
             PrintStatText(txt_out, it.first, it.second,
                           header_descs_[it.first]);
-        }
+           /* if( it.first == "average_active_bandwidth")
+                std::cout<<" BW "<<it.second;
+           /* if( it.first == "num_reads_done")
+                std::cout<<" read "<<it.second;
+            if( it.first == "num_writes_done")
+                std::cout<<" write "<<it.second;*/
+            
+            /*if( it.first == "num_cycles"){
+                  cycles = stoull(it.second);
+                  //std::cout << " cycles  "<<it.second;
+            }  
+            if( it.first == "num_active_cycles"){
+                  active_cycles = stoull(it.second);
+                  //std::cout << " active cycles  "<<it.second;
+            }  
+            if( it.first == "sum_requests"){
+                  sum_requests = stoull(it.second);
+                  //std::cout << " sum_requests  "<<it.second;
+            }  
+            if( it.first == "sum_blp"){
+                  sum_blp = stoull(it.second);
+                  //std::cout << " sum_requests  "<<it.second;
+            }   */   
+            
+             
+        }/*
+        std::cout<<" activeRate "<< (float)active_cycles/cycles;
+        std::cout<<" MLP "<< (float)sum_requests/active_cycles;
+        std::cout<<" BLP "<< (float)sum_blp/active_cycles<<"\n";
+        */
     }
 
     print_pairs_.clear();
@@ -395,7 +429,7 @@ void SimpleStats::UpdateEpochStats() {
     double total_time = epoch_counters_["num_cycles"] * config_.tCK;
     double avg_bw = total_reqs * config_.request_size_bytes / total_time;
     calculated_["average_bandwidth"] = avg_bw;
-    total_time = (epoch_counters_["num_reads_done"]-epoch_counters_["num_active_cycles"])
+    total_time = (epoch_counters_["num_cycles"]-epoch_counters_["num_idle_cycles"])
                  * config_.tCK;
     avg_bw = total_reqs * config_.request_size_bytes / total_time;
     calculated_["average_active_bandwidth"] = avg_bw;

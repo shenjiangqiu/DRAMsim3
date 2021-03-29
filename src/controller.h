@@ -38,9 +38,15 @@ class Controller {
     std::pair<uint64_t, int> ReturnDoneTrans(uint64_t clock);
 
     int channel_id_;
+    ~Controller( );
 
    private:
     uint64_t clk_;
+    uint64_t active_clk_; //for blp
+    uint64_t active_clk1_; //for mlp
+    uint64_t finished_reads;
+    uint64_t finished_writes;
+
     const Config &config_;
     SimpleStats simple_stats_;
     ChannelState channel_state_;
@@ -64,6 +70,12 @@ class Controller {
 
     // completed transactions
     std::vector<Transaction> return_queue_;
+     
+    int inflight_bank_req[64];
+    int blp;
+    uint64_t sum_blp;
+    int mlp;
+    uint64_t sum_mlp;
 
     // row buffer policy
     RowBufPolicy row_buf_policy_;
