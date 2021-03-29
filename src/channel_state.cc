@@ -141,6 +141,7 @@ void ChannelState::UpdateTiming(const Command& cmd, uint64_t clk) {
     switch (cmd.cmd_type) {
         case CommandType::ACTIVATE:
             UpdateActivationTimes(cmd.Rank(), clk);
+            [[fallthrough]];
         case CommandType::READ:
         case CommandType::READ_PRECHARGE:
         case CommandType::WRITE:
