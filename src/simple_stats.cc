@@ -103,7 +103,7 @@ std::string SimpleStats::GetTextHeader(bool is_final) const {
     return header;
 }
 
-void SimpleStats::PrintEpochStats( bool cout) {
+void SimpleStats::PrintEpochStats( bool ) {
     UpdateEpochStats();
     if (config_.output_level >= 1) {
         std::ofstream j_out(config_.json_epoch_name, std::ofstream::app);
@@ -119,10 +119,9 @@ void SimpleStats::PrintEpochStats( bool cout) {
     print_pairs_.clear();
 }
 
-void SimpleStats::PrintFinalStats( bool cout) {
+void SimpleStats::PrintFinalStats( bool ) {
     UpdateFinalStats();
-    unsigned long long  active_cycles, cycles;
-    unsigned long long  sum_requests, sum_blp;
+
     if (config_.output_level >= 0) {
         std::ofstream j_out(config_.json_stats_name, std::ofstream::app);
         j_out << "\"" << std::to_string(channel_id_) << "\":";
@@ -140,7 +139,7 @@ void SimpleStats::PrintFinalStats( bool cout) {
                           header_descs_[it.first]);
            /* if( it.first == "average_active_bandwidth")
                 std::cout<<" BW "<<it.second;
-           /* if( it.first == "num_reads_done")
+           if( it.first == "num_reads_done")
                 std::cout<<" read "<<it.second;
             if( it.first == "num_writes_done")
                 std::cout<<" write "<<it.second;*/

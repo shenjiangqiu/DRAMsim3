@@ -8,7 +8,7 @@ namespace dramsim3 {
 // destructive
 int BaseDRAMSystem::total_channels_ = 0;
 
-BaseDRAMSystem::BaseDRAMSystem(Config &config, const std::string &output_dir,
+BaseDRAMSystem::BaseDRAMSystem(Config &config, const std::string &,
                                std::function<void(uint64_t)> read_callback,
                                std::function<void(uint64_t)> write_callback)
     : read_callback_(read_callback),

@@ -24,12 +24,12 @@ void MemorySystem::ClockTick() { dram_system_->ClockTick(); }
 
 int MemorySystem::GetChannel(uint64_t addr) const { 
     std::cout<<this<<std::endl;
-    dram_system_->GetChannel(addr); 
+    return dram_system_->GetChannel(addr);
 }
 
 int MemorySystem::GetBankID(uint64_t addr) const {
     std::cout<<this<<std::endl;
-    dram_system_->GetBankID(addr); 
+    return dram_system_->GetBankID(addr);
 }
 
 double MemorySystem::GetTCK() const { return config_.tCK; }
