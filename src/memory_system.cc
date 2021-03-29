@@ -5,31 +5,40 @@ MemorySystem::MemorySystem(const std::string &config_file,
                            const std::string &output_dir,
                            std::function<void(uint64_t)> read_callback,
                            std::function<void(uint64_t)> write_callback)
-    : config_(new Config(config_file, output_dir)) {
+    : config_(config_file, output_dir) {
     // TODO: ideal memory type?
-    if (config_->IsHMC()) {
-        dram_system_ = new HMCMemorySystem(*config_, output_dir, read_callback,
-                                           write_callback);
+    if (config_.IsHMC()) {
+        dram_system_ = std::unique_ptr<HMCMemorySystem>(new HMCMemorySystem(config_, output_dir, read_callback,
+                                           write_callback));
     } else {
-        dram_system_ = new JedecDRAMSystem(*config_, output_dir, read_callback,
-                                           write_callback);
+        dram_system_ = std::unique_ptr<JedecDRAMSystem>( new JedecDRAMSystem(config_, output_dir, read_callback,
+                                           write_callback));
     }
 }
 
 MemorySystem::~MemorySystem() {
-    delete (dram_system_);
-    delete (config_);
+
 }
 
 void MemorySystem::ClockTick() { dram_system_->ClockTick(); }
 
-double MemorySystem::GetTCK() const { return config_->tCK; }
+int MemorySystem::GetChannel(uint64_t addr) const { 
+    std::cout<<this<<std::endl;
+    return dram_system_->GetChannel(addr);
+}
 
-int MemorySystem::GetBusBits() const { return config_->bus_width; }
+int MemorySystem::GetBankID(uint64_t addr) const {
+    std::cout<<this<<std::endl;
+    return dram_system_->GetBankID(addr);
+}
 
-int MemorySystem::GetBurstLength() const { return config_->BL; }
+double MemorySystem::GetTCK() const { return config_.tCK; }
 
-int MemorySystem::GetQueueSize() const { return config_->trans_queue_size; }
+int MemorySystem::GetBusBits() const { return config_.bus_width; }
+
+int MemorySystem::GetBurstLength() const { return config_.BL; }
+
+int MemorySystem::GetQueueSize() const { return config_.trans_queue_size; }
 
 void MemorySystem::RegisterCallbacks(
     std::function<void(uint64_t)> read_callback,

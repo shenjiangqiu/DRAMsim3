@@ -17,9 +17,13 @@ void PrintStatText(std::ostream& where, std::string name, T value,
 }
 
 SimpleStats::SimpleStats(const Config& config, int channel_id)
-    : config_(config), channel_id_(channel_id), background_energy(config.ranks) {
+    : config_(config), channel_id_(channel_id) {
     // counter stats
     InitStat("num_cycles", "counter", "Number of DRAM cycles");
+    InitStat("num_idle_cycles", "counter", "Number of idle DRAM cycles");
+    InitStat("num_active_cycles", "counter", "Number of active DRAM cycles");
+    InitStat("sum_requests", "counter", "Sum of requests");
+    InitStat("sum_blp", "counter", "Sum of BLP");
     InitStat("epoch_num", "counter", "Number of epochs");
     InitStat("num_reads_done", "counter", "Number of read requests issued");
     InitStat("num_writes_done", "counter", "Number of read requests issued");
@@ -69,6 +73,7 @@ SimpleStats::SimpleStats(const Config& config, int channel_id)
 
     // some irregular stats
     InitStat("average_bandwidth", "calculated", "Average bandwidth");
+    InitStat("average_active_bandwidth", "calculated", "Average active bandwidth");
     InitStat("total_energy", "calculated", "Total energy (pJ)");
     InitStat("average_power", "calculated", "Average power (mW)");
     InitStat("average_read_latency", "calculated",
@@ -98,16 +103,11 @@ std::string SimpleStats::GetTextHeader(bool is_final) const {
     return header;
 }
 
-void SimpleStats::PrintEpochStats(bool cout) {
+void SimpleStats::PrintEpochStats( bool ) {
     UpdateEpochStats();
     if (config_.output_level >= 1) {
-        // 2020.12.28 added by Fuping Niu
-        if(cout) {
-            std::cout << j_data_;
-        } else {
-            std::ofstream j_out(config_.json_epoch_name, std::ofstream::app);
-            j_out << j_data_;
-        }
+        std::ofstream j_out(config_.json_epoch_name, std::ofstream::app);
+        j_out << j_data_;
     }
     if (config_.output_level >= 2) {
         std::cout << GetTextHeader(false);
@@ -119,39 +119,54 @@ void SimpleStats::PrintEpochStats(bool cout) {
     print_pairs_.clear();
 }
 
-void SimpleStats::PrintFinalStats(bool cout) {
+void SimpleStats::PrintFinalStats( bool ) {
     UpdateFinalStats();
 
     if (config_.output_level >= 0) {
-        // 2020.12.28 added by Fuping Niu
-        if(cout) {
-            std::ofstream j_out(config_.json_stats_name, std::ofstream::app);
-            j_out << "\"" << std::to_string(channel_id_) << "\":";
-            j_out << j_data_;
-        } else {
-            std::cout << "\"" << std::to_string(channel_id_) << "\":";
-            std::cout << j_data_;
-        }
+        std::ofstream j_out(config_.json_stats_name, std::ofstream::app);
+        j_out << "\"" << std::to_string(channel_id_) << "\":";
+        j_out << j_data_;
     }
 
     if (config_.output_level >= 1) {
         // HACK: overwrite existing file if this is first channel
-        // 2020.12.28 added by Fuping Niu
-        if(cout) {
-            std::cout << GetTextHeader(true);
-            for (const auto& it : print_pairs_) {
-                PrintStatText(std::cout, it.first, it.second,
-                            header_descs_[it.first]);
-            }
-        } else {
-            auto perm = channel_id_ == 0 ? std::ofstream::out : std::ofstream::app;
-            std::ofstream txt_out(config_.txt_stats_name, perm);
-            txt_out << GetTextHeader(true);
-            for (const auto& it : print_pairs_) {
-                PrintStatText(txt_out, it.first, it.second,
-                            header_descs_[it.first]);
-            }
-        }
+        auto perm = channel_id_ == 0 ? std::ofstream::out : std::ofstream::app;
+        std::ofstream txt_out(config_.txt_stats_name, perm);
+        
+        //std::cout <<"channel "<< channel_id_<<"  ";
+        for (const auto& it : print_pairs_) {
+            PrintStatText(txt_out, it.first, it.second,
+                          header_descs_[it.first]);
+           /* if( it.first == "average_active_bandwidth")
+                std::cout<<" BW "<<it.second;
+           if( it.first == "num_reads_done")
+                std::cout<<" read "<<it.second;
+            if( it.first == "num_writes_done")
+                std::cout<<" write "<<it.second;*/
+            
+            /*if( it.first == "num_cycles"){
+                  cycles = stoull(it.second);
+                  //std::cout << " cycles  "<<it.second;
+            }  
+            if( it.first == "num_active_cycles"){
+                  active_cycles = stoull(it.second);
+                  //std::cout << " active cycles  "<<it.second;
+            }  
+            if( it.first == "sum_requests"){
+                  sum_requests = stoull(it.second);
+                  //std::cout << " sum_requests  "<<it.second;
+            }  
+            if( it.first == "sum_blp"){
+                  sum_blp = stoull(it.second);
+                  //std::cout << " sum_requests  "<<it.second;
+            }   */   
+            
+             
+        }/*
+        std::cout<<" activeRate "<< (float)active_cycles/cycles;
+        std::cout<<" MLP "<< (float)sum_requests/active_cycles;
+        std::cout<<" BLP "<< (float)sum_blp/active_cycles<<"\n";
+        */
     }
 
     print_pairs_.clear();
@@ -185,10 +200,6 @@ void SimpleStats::Reset() {
     for (auto& it : epoch_histo_counts_) {
         it.second.clear();
     }
-}
-
-double SimpleStats::RankBackgroundEnergy(int rank) {
-    return background_energy.at(rank);
 }
 
 void SimpleStats::InitStat(std::string name, std::string stat_type,
@@ -395,6 +406,7 @@ void SimpleStats::UpdateEpochStats() {
         epoch_counters_["num_refb_cmds"] * config_.refb_energy_inc;
 
     // vector doubles, update first, then push
+    double background_energy = 0.0;
     for (int i = 0; i < config_.ranks; i++) {
         double act_stb = epoch_vec_counters_["rank_active_cycles"][i] *
                          config_.act_stb_energy_inc;
@@ -405,9 +417,8 @@ void SimpleStats::UpdateEpochStats() {
         vec_doubles_["act_stb_energy"][i] = act_stb;
         vec_doubles_["pre_stb_energy"][i] = pre_stb;
         vec_doubles_["sref_energy"][i] = sref_energy;
-        background_energy.at(i) = act_stb + pre_stb + sref_energy;
+        background_energy += act_stb + pre_stb + sref_energy;
     }
-    double total_background_energy = std::accumulate(background_energy.begin(), background_energy.end(), 0.0);
 
     UpdateHistoBins();
 
@@ -417,10 +428,15 @@ void SimpleStats::UpdateEpochStats() {
     double total_time = epoch_counters_["num_cycles"] * config_.tCK;
     double avg_bw = total_reqs * config_.request_size_bytes / total_time;
     calculated_["average_bandwidth"] = avg_bw;
+    total_time = (epoch_counters_["num_cycles"]-epoch_counters_["num_idle_cycles"])
+                 * config_.tCK;
+    avg_bw = total_reqs * config_.request_size_bytes / total_time;
+    calculated_["average_active_bandwidth"] = avg_bw;
+
 
     double total_energy = doubles_["act_energy"] + doubles_["read_energy"] +
                           doubles_["write_energy"] + doubles_["ref_energy"] +
-                          doubles_["refb_energy"] + total_background_energy;
+                          doubles_["refb_energy"] + background_energy;
     calculated_["total_energy"] = total_energy;
     calculated_["average_power"] = total_energy / epoch_counters_["num_cycles"];
     calculated_["average_read_latency"] =
@@ -455,6 +471,7 @@ void SimpleStats::UpdateFinalStats() {
         counters_["num_refb_cmds"] * config_.refb_energy_inc;
 
     // vector doubles, update first, then push
+    double background_energy = 0.0;
     for (int i = 0; i < config_.ranks; i++) {
         double act_stb =
             vec_counters_["rank_active_cycles"][i] * config_.act_stb_energy_inc;
@@ -465,9 +482,8 @@ void SimpleStats::UpdateFinalStats() {
         vec_doubles_["act_stb_energy"][i] = act_stb;
         vec_doubles_["pre_stb_energy"][i] = pre_stb;
         vec_doubles_["sref_energy"][i] = sref_energy;
-        background_energy.at(i) = act_stb + pre_stb + sref_energy;
+        background_energy += act_stb + pre_stb + sref_energy;
     }
-    double total_background_energy = std::accumulate(background_energy.begin(), background_energy.end(), 0.0);
 
     // histograms
     UpdateHistoBins();
@@ -478,10 +494,15 @@ void SimpleStats::UpdateFinalStats() {
     double total_time = counters_["num_cycles"] * config_.tCK;
     double avg_bw = total_reqs * config_.request_size_bytes / total_time;
     calculated_["average_bandwidth"] = avg_bw;
+    total_time = (counters_["num_cycles"]- counters_["num_idle_cycles"]) 
+                 * config_.tCK;
+    avg_bw = total_reqs * config_.request_size_bytes / total_time;
+    calculated_["average_active_bandwidth"] = avg_bw;
+
 
     double total_energy = doubles_["act_energy"] + doubles_["read_energy"] +
                           doubles_["write_energy"] + doubles_["ref_energy"] +
-                          doubles_["refb_energy"] + total_background_energy;
+                          doubles_["refb_energy"] + background_energy;
     calculated_["total_energy"] = total_energy;
     calculated_["average_power"] = total_energy / counters_["num_cycles"];
     // calculated_["average_read_latency"] = GetHistoAvg("read_latency");

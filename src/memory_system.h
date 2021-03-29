@@ -26,16 +26,19 @@ class MemorySystem {
     int GetQueueSize() const;
     void PrintStats() const;
     void ResetStats();
-
+     
     bool WillAcceptTransaction(uint64_t hex_addr, bool is_write) const;
     bool AddTransaction(uint64_t hex_addr, bool is_write);
+
+    int GetChannel( uint64_t hex_addr) const;
+    int GetBankID( uint64_t hex_addr)  const;  
 
    private:
     // These have to be pointers because Gem5 will try to push this object
     // into container which will invoke a copy constructor, using pointers
     // here is safe
-    Config *config_;
-    BaseDRAMSystem *dram_system_;
+    Config config_;
+    std::unique_ptr<BaseDRAMSystem> dram_system_;
 };
 
 MemorySystem* GetMemorySystem(const std::string &config_file, const std::string &output_dir,

@@ -40,7 +40,7 @@ add_library(dramsim3 STATIC
     src/timing.cc
     src/memory_system.cc
 )
-
+target_compile_options(dramsim3 PRIVATE -Wall -Wextra -Werror)
 if (THERMAL)
     # dependency check
     # sudo apt-get install libatlas-base-dev on ubuntu

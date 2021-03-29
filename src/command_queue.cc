@@ -2,7 +2,7 @@
 
 namespace dramsim3 {
 
-CommandQueue::CommandQueue(int channel_id, const Config& config,
+CommandQueue::CommandQueue(int , const Config& config,
                            const ChannelState& channel_state,
                            SimpleStats& simple_stats)
     : rank_q_empty(config.ranks, true),
@@ -115,7 +115,7 @@ bool CommandQueue::WillAcceptCommand(int rank, int bankgroup, int bank) const {
 }
 
 bool CommandQueue::QueueEmpty() const {
-    for (const auto q : queues_) {
+    for (const auto &q : queues_) {
         if (!q.empty()) {
             return false;
         }
