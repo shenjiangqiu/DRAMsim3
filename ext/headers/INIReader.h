@@ -118,7 +118,7 @@ https://github.com/benhoyt/inih
 #endif
 
 #define MAX_SECTION 50
-#define MAX_NAME 50
+#define MAX_NAME 250
 
 /* Strip whitespace chars off end of given string, in place. Return s. */
 inline static char* rstrip(char* s)
