@@ -23,12 +23,12 @@ MemorySystem::~MemorySystem() {
 void MemorySystem::ClockTick() { dram_system_->ClockTick(); }
 
 int MemorySystem::GetChannel(uint64_t addr) const { 
-    std::cout<<this<<std::endl;
+    //std::cout<<this<<std::endl;
     return dram_system_->GetChannel(addr);
 }
 
 int MemorySystem::GetBankID(uint64_t addr) const {
-    std::cout<<this<<std::endl;
+    //std::cout<<this<<std::endl;
     return dram_system_->GetBankID(addr);
 }
 
