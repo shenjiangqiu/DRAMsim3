@@ -279,7 +279,7 @@ void SimpleStats::UpdateHistoBins() {
         const auto& name = name_bins.first;
         auto& bins = name_bins.second;
         std::fill(bins.begin(), bins.end(), 0);
-        for (const auto it : epoch_histo_counts_[name]) {
+        for (const auto &it : epoch_histo_counts_[name]) {
             int value = it.first;
             uint64_t count = it.second;
             int bin_idx = 0;

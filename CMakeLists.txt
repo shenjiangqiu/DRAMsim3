@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(dramsim3)
-
+find_package(Catch2 REQUIRED)
+find_package(fmt REQUIRED)
 set(default_build_type "Release")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
@@ -14,9 +15,6 @@ endif()
 add_library(inih INTERFACE)
 target_include_directories(inih INTERFACE ext/headers)
 
-add_library(format INTERFACE)
-target_include_directories(format INTERFACE ext/fmt/include)
-target_compile_definitions(format INTERFACE FMT_HEADER_ONLY=1)
 
 # argparsing library, only used in main program not the library
 add_library(args INTERFACE)
@@ -40,6 +38,7 @@ add_library(dramsim3 STATIC
     src/timing.cc
     src/memory_system.cc
 )
+target_link_libraries(dramsim3 PRIVATE Catch2::Catch2 fmt::fmt)
 target_compile_options(dramsim3 PRIVATE -Wall -Wextra -Werror)
 if (THERMAL)
     # dependency check
@@ -79,7 +78,6 @@ endif (ADDR_TRACE)
 
 target_include_directories(dramsim3 INTERFACE src)
 target_compile_options(dramsim3 PRIVATE -Wall)
-target_link_libraries(dramsim3 PRIVATE format)
 target_link_libraries(dramsim3 PUBLIC inih)
 set_target_properties(dramsim3 PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}
