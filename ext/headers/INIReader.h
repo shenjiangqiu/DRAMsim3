@@ -231,7 +231,7 @@ inline int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler
             end = find_chars_or_comment(start + 1, "]");
             if (*end == ']') {
                 *end = '\0';
-                strncpy0(section, start + 1, sizeof(section));
+                strncpy0(section, start + 1, sizeof(section)-1);
                 *prev_name = '\0';
             }
             else if (!error) {

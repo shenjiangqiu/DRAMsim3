@@ -1,5 +1,5 @@
 #define CATCH_CONFIG_MAIN
-#include <Catch2/catch.hpp>
+#include <catch2/catch.hpp>
 #include "configuration.h"
 
 TEST_CASE("Address Mapping", "[config]") {
