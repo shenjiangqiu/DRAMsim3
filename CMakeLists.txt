@@ -39,7 +39,7 @@ add_library(dramsim3 STATIC
     src/memory_system.cc
 )
 target_link_libraries(dramsim3 PRIVATE Catch2::Catch2 fmt::fmt)
-target_compile_options(dramsim3 PRIVATE -Wall -Wextra -Werror)
+target_compile_options(dramsim3 PRIVATE -Wall -Wextra)
 if (THERMAL)
     # dependency check
     # sudo apt-get install libatlas-base-dev on ubuntu
