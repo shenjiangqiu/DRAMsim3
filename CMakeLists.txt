@@ -38,7 +38,7 @@ add_library(dramsim3 STATIC
     src/timing.cc
     src/memory_system.cc
 )
-target_link_libraries(dramsim3 PRIVATE Catch2::Catch2 fmt::fmt)
+target_link_libraries(dramsim3 PRIVATE Catch2::Catch2 fmt::fmt-header-only)
 target_compile_options(dramsim3 PRIVATE -Wall -Wextra)
 if (THERMAL)
     # dependency check
