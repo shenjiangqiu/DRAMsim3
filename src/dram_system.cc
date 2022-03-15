@@ -35,19 +35,19 @@ int BaseDRAMSystem::GetChannel(uint64_t hex_addr) const {
 
 void BaseDRAMSystem::PrintEpochStats() {
     // first epoch, print bracket
-    if (clk_ - config_.epoch_period == 0) {
-        std::ofstream epoch_out(config_.json_epoch_name, std::ofstream::out);
-        epoch_out << "[";
-    }
-    for (size_t i = 0; i < ctrls_.size(); i++) {
-        ctrls_[i]->PrintEpochStats();
-        std::ofstream epoch_out(config_.json_epoch_name, std::ofstream::app);
-        epoch_out << "," << std::endl;
-    }
-#ifdef THERMAL
-    thermal_calc_.PrintTransPT(clk_);
-#endif  // THERMAL
-    return;
+//     if (clk_ - config_.epoch_period == 0) {
+//         std::ofstream epoch_out(config_.json_epoch_name, std::ofstream::out);
+//         epoch_out << "[";
+//     }
+//     for (size_t i = 0; i < ctrls_.size(); i++) {
+//         ctrls_[i]->PrintEpochStats();
+//         std::ofstream epoch_out(config_.json_epoch_name, std::ofstream::app);
+//         epoch_out << "," << std::endl;
+//     }
+// #ifdef THERMAL
+//     thermal_calc_.PrintTransPT(clk_);
+// #endif  // THERMAL
+//     return;
 }
 
 void BaseDRAMSystem::PrintStats() {

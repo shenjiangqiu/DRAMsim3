@@ -94,8 +94,8 @@ class SimpleStats {
     VecStat epoch_histo_bins_;
 
     // outputs
-    Json j_data_;
-    std::vector<std::pair<std::string, std::string> > print_pairs_;
+    //Json j_data_;
+    //std::vector<std::pair<std::string, std::string> > print_pairs_;
 };
 
 }  // namespace dramsim3
