@@ -20,6 +20,10 @@ SimpleStats::SimpleStats(const Config& config, int channel_id)
     : config_(config), channel_id_(channel_id) {
     // counter stats
     InitStat("num_cycles", "counter", "Number of DRAM cycles");
+    InitStat("num_idle_cycles", "counter", "Number of idle DRAM cycles");
+    InitStat("num_active_cycles", "counter", "Number of active DRAM cycles");
+    InitStat("sum_requests", "counter", "Sum of requests");
+    InitStat("sum_blp", "counter", "Sum of BLP");
     InitStat("epoch_num", "counter", "Number of epochs");
     InitStat("num_reads_done", "counter", "Number of read requests issued");
     InitStat("num_writes_done", "counter", "Number of read requests issued");
@@ -69,6 +73,7 @@ SimpleStats::SimpleStats(const Config& config, int channel_id)
 
     // some irregular stats
     InitStat("average_bandwidth", "calculated", "Average bandwidth");
+    InitStat("average_active_bandwidth", "calculated", "Average active bandwidth");
     InitStat("total_energy", "calculated", "Total energy (pJ)");
     InitStat("average_power", "calculated", "Average power (mW)");
     InitStat("average_read_latency", "calculated",
@@ -98,7 +103,7 @@ std::string SimpleStats::GetTextHeader(bool is_final) const {
     return header;
 }
 
-void SimpleStats::PrintEpochStats() {
+void SimpleStats::PrintEpochStats( bool ) {
     UpdateEpochStats();
     if (config_.output_level >= 1) {
         std::ofstream j_out(config_.json_epoch_name, std::ofstream::app);
@@ -114,7 +119,7 @@ void SimpleStats::PrintEpochStats() {
     // print_pairs_.clear();
 }
 
-void SimpleStats::PrintFinalStats() {
+void SimpleStats::PrintFinalStats( bool ) {
     UpdateFinalStats();
 
     if (config_.output_level >= 0) {
@@ -126,8 +131,8 @@ void SimpleStats::PrintFinalStats() {
     if (config_.output_level >= 1) {
         // HACK: overwrite existing file if this is first channel
         auto perm = channel_id_ == 0 ? std::ofstream::out : std::ofstream::app;
-        std::ofstream txt_out(config_.txt_stats_name, perm);
-        txt_out << GetTextHeader(true);
+        // std::ofstream txt_out(config_.txt_stats_name, perm);
+        // txt_out << GetTextHeader(true);
         // for (const auto& it : print_pairs_) {
         //     PrintStatText(txt_out, it.first, it.second,
         //                   header_descs_[it.first]);
@@ -244,7 +249,7 @@ void SimpleStats::UpdateHistoBins() {
         const auto& name = name_bins.first;
         auto& bins = name_bins.second;
         std::fill(bins.begin(), bins.end(), 0);
-        for (const auto it : epoch_histo_counts_[name]) {
+        for (const auto &it : epoch_histo_counts_[name]) {
             int value = it.first;
             uint64_t count = it.second;
             int bin_idx = 0;
@@ -393,6 +398,11 @@ void SimpleStats::UpdateEpochStats() {
     double total_time = epoch_counters_["num_cycles"] * config_.tCK;
     double avg_bw = total_reqs * config_.request_size_bytes / total_time;
     calculated_["average_bandwidth"] = avg_bw;
+    total_time = (epoch_counters_["num_cycles"]-epoch_counters_["num_idle_cycles"])
+                 * config_.tCK;
+    avg_bw = total_reqs * config_.request_size_bytes / total_time;
+    calculated_["average_active_bandwidth"] = avg_bw;
+
 
     double total_energy = doubles_["act_energy"] + doubles_["read_energy"] +
                           doubles_["write_energy"] + doubles_["ref_energy"] +
@@ -454,6 +464,11 @@ void SimpleStats::UpdateFinalStats() {
     double total_time = counters_["num_cycles"] * config_.tCK;
     double avg_bw = total_reqs * config_.request_size_bytes / total_time;
     calculated_["average_bandwidth"] = avg_bw;
+    total_time = (counters_["num_cycles"]- counters_["num_idle_cycles"]) 
+                 * config_.tCK;
+    avg_bw = total_reqs * config_.request_size_bytes / total_time;
+    calculated_["average_active_bandwidth"] = avg_bw;
+
 
     double total_energy = doubles_["act_energy"] + doubles_["read_energy"] +
                           doubles_["write_energy"] + doubles_["ref_energy"] +

@@ -17,13 +17,8 @@ struct Address {
           bank(bank),
           row(row),
           column(column) {}
-    Address(const Address& addr)
-        : channel(addr.channel),
-          rank(addr.rank),
-          bankgroup(addr.bankgroup),
-          bank(addr.bank),
-          row(addr.row),
-          column(addr.column) {}
+    Address(const Address& addr)=default;
+
     int channel;
     int rank;
     int bankgroup;
@@ -111,11 +106,7 @@ struct Transaction {
           added_cycle(0),
           complete_cycle(0),
           is_write(is_write) {}
-    Transaction(const Transaction& tran)
-        : addr(tran.addr),
-          added_cycle(tran.added_cycle),
-          complete_cycle(tran.complete_cycle),
-          is_write(tran.is_write) {}
+    Transaction(const Transaction& tran)=default;
     uint64_t addr;
     uint64_t added_cycle;
     uint64_t complete_cycle;

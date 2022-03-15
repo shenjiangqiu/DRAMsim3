@@ -1,5 +1,5 @@
-#ifndef __CHANNEL_STATE_H
-#define __CHANNEL_STATE_H
+#ifndef CHANNEL_STATE_H
+#define CHANNEL_STATE_H
 
 #include <vector>
 #include "bankstate.h"
@@ -82,4 +82,6 @@ class ChannelState {
 };
 
 }  // namespace dramsim3
-#endif
+
+
+#endif /* CHANNEL_STATE_H */

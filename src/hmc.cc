@@ -327,8 +327,8 @@ inline void HMCMemorySystem::IterateNextLink() {
     return;
 }
 
-bool HMCMemorySystem::WillAcceptTransaction(uint64_t hex_addr,
-                                            bool is_write) const {
+bool HMCMemorySystem::WillAcceptTransaction(uint64_t ,
+                                            bool ) const {
     bool insertable = false;
     for (auto link_queue = link_req_queues_.begin();
          link_queue != link_req_queues_.end(); link_queue++) {

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(dramsim3)
-
+find_package(Catch2 REQUIRED)
+find_package(fmt REQUIRED)
 set(default_build_type "Release")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
@@ -14,9 +15,6 @@ endif()
 add_library(inih INTERFACE)
 target_include_directories(inih INTERFACE ext/headers)
 
-add_library(format INTERFACE)
-target_include_directories(format INTERFACE ext/fmt/include)
-target_compile_definitions(format INTERFACE FMT_HEADER_ONLY=1)
 
 # argparsing library, only used in main program not the library
 add_library(args INTERFACE)
@@ -40,10 +38,12 @@ add_library(dramsim3 STATIC
     src/timing.cc
     src/memory_system.cc
 )
-
+target_link_libraries(dramsim3 PRIVATE Catch2::Catch2 fmt::fmt-header-only)
+target_compile_options(dramsim3 PRIVATE -Wall -Wextra)
 if (THERMAL)
     # dependency check
     # sudo apt-get install libatlas-base-dev on ubuntu
+    message("Using thermal")
     find_package(BLAS REQUIRED)
     find_package(OpenMP REQUIRED)
     # YOU need to build superlu on your own. Do the following:
@@ -55,7 +55,7 @@ if (THERMAL)
     )
 
     target_link_libraries(dramsim3
-        PRIVATE ${SUPERLU} f77blas atlas m ${OpenMP_C_FLAGS}
+        PRIVATE ${SUPERLU} openblas m ${OpenMP_C_FLAGS}
     )
     target_sources(dramsim3
         PRIVATE src/thermal.cc src/sp_ienv.c src/thermal_solver.c
@@ -78,11 +78,10 @@ endif (ADDR_TRACE)
 
 target_include_directories(dramsim3 INTERFACE src)
 target_compile_options(dramsim3 PRIVATE -Wall)
-target_link_libraries(dramsim3 PRIVATE format)
 target_link_libraries(dramsim3 PUBLIC inih)
 set_target_properties(dramsim3 PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}
-    CXX_STANDARD 11
+    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
 )
@@ -92,21 +91,19 @@ add_executable(dramsim3main src/main.cc src/cpu.cc)
 target_link_libraries(dramsim3main PRIVATE dramsim3 args)
 target_compile_options(dramsim3main PRIVATE)
 set_target_properties(dramsim3main PROPERTIES
-    CXX_STANDARD 11
+    CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
 )
 
 # Unit testing
-add_library(Catch INTERFACE)
-target_include_directories(Catch INTERFACE ext/headers)
 
 add_executable(dramsim3test EXCLUDE_FROM_ALL
     tests/test_config.cc
     tests/test_dramsys.cc
     tests/test_hmcsys.cc # IDK somehow this can literally crush your computer
 )
-target_link_libraries(dramsim3test Catch dramsim3)
+target_link_libraries(dramsim3test Catch2::Catch2 dramsim3)
 target_include_directories(dramsim3test PRIVATE src/)
 
 # We have to use this custome command because there's a bug in cmake

@@ -1,5 +1,6 @@
-#ifndef __BANKSTATE_H
-#define __BANKSTATE_H
+#ifndef BANKSTATE_H
+#define BANKSTATE_H
+
 
 #include <vector>
 #include "common.h"
@@ -39,4 +40,5 @@ class BankState {
 };
 
 }  // namespace dramsim3
-#endif
+
+#endif /* BANKSTATE_H */

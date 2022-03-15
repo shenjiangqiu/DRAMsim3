@@ -33,6 +33,18 @@ Controller::Controller(int channel, const Config &config, const Timing &timing)
         read_queue_.reserve(config_.trans_queue_size);
         write_buffer_.reserve(config_.trans_queue_size);
     }
+    
+      blp = 0;
+      mlp = 0;
+      sum_mlp = 0;
+      sum_blp = 0;
+      active_clk_ = 0;
+      active_clk1_ = 0;
+      finished_reads = 0;
+      finished_writes = 0;
+      for(int i = 0; i< 64; i++)
+        inflight_bank_req[i] = 0;
+
 
 #ifdef CMD_TRACE
     std::string trace_file_name = config_.output_prefix + "ch_" +
@@ -48,10 +60,20 @@ std::pair<uint64_t, int> Controller::ReturnDoneTrans(uint64_t clk) {
         if (clk >= it->complete_cycle) {
             if (it->is_write) {
                 simple_stats_.Increment("num_writes_done");
+                finished_writes++;
             } else {
                 simple_stats_.Increment("num_reads_done");
                 simple_stats_.AddValue("read_latency", clk_ - it->added_cycle);
+                finished_reads++;
             }
+            
+            auto addr = config_.AddressMapping(it->addr);
+            int bank_id = addr.bankgroup*config_.banks_per_group+addr.bank;
+            
+            inflight_bank_req[bank_id]--;
+            if( inflight_bank_req[bank_id] == 0)
+               blp--;
+
             auto pair = std::make_pair(it->addr, it->is_write);
             it = return_queue_.erase(it);
             return pair;
@@ -145,10 +167,44 @@ void Controller::ClockTick() {
     clk_++;
     cmd_queue_.ClockTick();
     simple_stats_.Increment("num_cycles");
+
+    if( is_unified_queue_ )
+         if( unified_queue_.empty())
+           simple_stats_.Increment("num_idle_cycles");
+         else{
+            //simple_stats_.Increment("num_active_cycles"); 
+            //simple_stats_.IncrementBy("sum_requests", unified_queue_.size());
+            //simple_stats_.IncrementBy("sum_blp",blp);
+            sum_mlp += unified_queue_.size();
+            if( blp ) {
+                active_clk_++;
+                sum_blp +=blp;
+            } 
+            active_clk1_++;  
+         }  
+    else{
+        if( read_queue_.empty() && write_buffer_.empty())
+          simple_stats_.Increment("num_idle_cycles");
+        else{
+            //simple_stats_.Increment("num_active_cycles");
+            int size = read_queue_.size() + pending_rd_q_.size();
+            size += write_buffer_.size() + pending_wr_q_.size();
+            //simple_stats_.IncrementBy("sum_requests",size);
+            //simple_stats_.IncrementBy("sum_blp",blp);
+            sum_mlp += size;
+            if( blp ) {
+                active_clk_++;
+                sum_blp += blp;
+            }   
+            active_clk1_++;
+        }  
+    
+    } 
+
     return;
 }
 
-bool Controller::WillAcceptTransaction(uint64_t hex_addr, bool is_write) const {
+bool Controller::WillAcceptTransaction(uint64_t , bool is_write) const {
     if (is_unified_queue_) {
         return unified_queue_.size() < unified_queue_.capacity();
     } else if (!is_write) {
@@ -163,6 +219,9 @@ bool Controller::AddTransaction(Transaction trans) {
     simple_stats_.AddValue("interarrival_latency", clk_ - last_trans_clk_);
     last_trans_clk_ = clk_;
 
+    auto addr = config_.AddressMapping(trans.addr);
+    assert( addr.bank >=0 &&addr.bank <16);
+
     if (trans.is_write) {
         if (pending_wr_q_.count(trans.addr) == 0) {  // can not merge writes
             pending_wr_q_.insert(std::make_pair(trans.addr, trans));
@@ -171,6 +230,7 @@ bool Controller::AddTransaction(Transaction trans) {
             } else {
                 write_buffer_.push_back(trans);
             }
+           
         }
         trans.complete_cycle = clk_ + 1;
         return_queue_.push_back(trans);
@@ -189,6 +249,12 @@ bool Controller::AddTransaction(Transaction trans) {
             } else {
                 read_queue_.push_back(trans);
             }
+            int bank_id = addr.bankgroup*config_.banks_per_group+addr.bank;
+            if(bank_id>=64)
+                throw std::runtime_error("bank id too large");
+            inflight_bank_req[bank_id]++;
+            if( inflight_bank_req[bank_id] == 1)
+                blp++;
         }
         return true;
     }
@@ -293,6 +359,7 @@ void Controller::PrintEpochStats() {
 
 void Controller::PrintFinalStats() {
     simple_stats_.PrintFinalStats();
+    
 
 #ifdef THERMAL
     for (int r = 0; r < config_.ranks; r++) {
@@ -342,6 +409,17 @@ void Controller::UpdateCommandStats(const Command &cmd) {
         default:
             AbruptExit(__FILE__, __LINE__);
     }
+}
+
+
+Controller::~Controller(  ){
+    double bw = (double)(finished_reads+finished_writes)*64.0/active_clk1_;
+    float mlp = (float)sum_mlp/active_clk1_;
+    float blp = (float)sum_blp/active_clk_;
+    float activeRate = (float)active_clk1_/clk_;
+    std::cout<<"channel "<<channel_id_<<"   BW "<<bw<<"   MLP "<< mlp;
+    std::cout<<"   BLP "<<blp<<"   activeRate "<<activeRate<<"\n";
+    
 }
 
 }  // namespace dramsim3

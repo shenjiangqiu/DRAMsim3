@@ -33,7 +33,7 @@ class BaseDRAMSystem {
     virtual bool AddTransaction(uint64_t hex_addr, bool is_write) = 0;
     virtual void ClockTick() = 0;
     int GetChannel(uint64_t hex_addr) const;
-
+    int GetBankID(uint64_t hex_addr) const;
     std::function<void(uint64_t req_id)> read_callback_, write_callback_;
     static int total_channels_;
 
@@ -48,7 +48,7 @@ class BaseDRAMSystem {
 #ifdef THERMAL
     ThermalCalculator thermal_calc_;
 #endif  // THERMAL
-
+    dramsim3::Controller* m;
     uint64_t clk_;
     std::vector<Controller*> ctrls_;
 
