@@ -38,7 +38,7 @@ add_library(dramsim3 STATIC
     src/timing.cc
     src/memory_system.cc
 )
-target_link_libraries(dramsim3 PRIVATE Catch2::Catch2 fmt::fmt-header-only)
+target_link_libraries(dramsim3 PRIVATE Catch2::Catch2WithMain fmt::fmt-header-only)
 target_compile_options(dramsim3 PRIVATE -Wall -Wextra)
 if (THERMAL)
     # dependency check
@@ -103,7 +103,7 @@ add_executable(dramsim3test EXCLUDE_FROM_ALL
     tests/test_dramsys.cc
     tests/test_hmcsys.cc # IDK somehow this can literally crush your computer
 )
-target_link_libraries(dramsim3test Catch2::Catch2 dramsim3)
+target_link_libraries(dramsim3test Catch2::Catch2WithMain dramsim3)
 target_include_directories(dramsim3test PRIVATE src/)
 
 # We have to use this custome command because there's a bug in cmake
