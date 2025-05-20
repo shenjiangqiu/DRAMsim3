@@ -16,6 +16,9 @@ class MemorySystem {
     MemorySystem(const std::string &config_file, const std::string &output_dir,
                  std::function<void(uint64_t)> read_callback,
                  std::function<void(uint64_t)> write_callback);
+    MemorySystem(Config *config_file, const std::string &output_dir,
+                 std::function<void(uint64_t)> read_callback,
+                 std::function<void(uint64_t)> write_callback);
     ~MemorySystem();
     void ClockTick();
     void RegisterCallbacks(std::function<void(uint64_t)> read_callback,
@@ -38,9 +41,10 @@ class MemorySystem {
     BaseDRAMSystem *dram_system_;
 };
 
-MemorySystem* GetMemorySystem(const std::string &config_file, const std::string &output_dir,
-                 std::function<void(uint64_t)> read_callback,
-                 std::function<void(uint64_t)> write_callback);
+MemorySystem *GetMemorySystem(const std::string &config_file,
+                              const std::string &output_dir,
+                              std::function<void(uint64_t)> read_callback,
+                              std::function<void(uint64_t)> write_callback);
 
 }  // namespace dramsim3
 

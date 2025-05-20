@@ -15,6 +15,19 @@ MemorySystem::MemorySystem(const std::string &config_file,
                                            write_callback);
     }
 }
+MemorySystem::MemorySystem(Config *config_file, const std::string &output_dir,
+                           std::function<void(uint64_t)> read_callback,
+                           std::function<void(uint64_t)> write_callback)
+    : config_(config_file) {
+    // TODO: ideal memory type?
+    if (config_->IsHMC()) {
+        dram_system_ = new HMCMemorySystem(*config_, output_dir, read_callback,
+                                           write_callback);
+    } else {
+        dram_system_ = new JedecDRAMSystem(*config_, output_dir, read_callback,
+                                           write_callback);
+    }
+}
 
 MemorySystem::~MemorySystem() {
     delete (dram_system_);
@@ -50,10 +63,12 @@ void MemorySystem::PrintStats() const { dram_system_->PrintStats(); }
 
 void MemorySystem::ResetStats() { dram_system_->ResetStats(); }
 
-MemorySystem* GetMemorySystem(const std::string &config_file, const std::string &output_dir,
-                 std::function<void(uint64_t)> read_callback,
-                 std::function<void(uint64_t)> write_callback) {
-    return new MemorySystem(config_file, output_dir, read_callback, write_callback);
+MemorySystem *GetMemorySystem(const std::string &config_file,
+                              const std::string &output_dir,
+                              std::function<void(uint64_t)> read_callback,
+                              std::function<void(uint64_t)> write_callback) {
+    return new MemorySystem(config_file, output_dir, read_callback,
+                            write_callback);
 }
 }  // namespace dramsim3
 

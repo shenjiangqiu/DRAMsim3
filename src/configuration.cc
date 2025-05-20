@@ -40,6 +40,17 @@ Address Config::AddressMapping(uint64_t hex_addr) const {
     int co = (hex_addr >> co_pos) & co_mask;
     return Address(channel, rank, bg, ba, ro, co);
 }
+uint64_t Config::GetHexAddress(const Address& addr) const {
+    uint64_t hex_addr = 0;
+    hex_addr |= (static_cast<uint64_t>(addr.channel) & ch_mask) << ch_pos;
+    hex_addr |= (static_cast<uint64_t>(addr.rank) & ra_mask) << ra_pos;
+    hex_addr |= (static_cast<uint64_t>(addr.bankgroup) & bg_mask) << bg_pos;
+    hex_addr |= (static_cast<uint64_t>(addr.bank) & ba_mask) << ba_pos;
+    hex_addr |= (static_cast<uint64_t>(addr.row) & ro_mask) << ro_pos;
+    hex_addr |= (static_cast<uint64_t>(addr.column) & co_mask) << co_pos;
+    hex_addr <<= shift_bits;
+    return hex_addr;
+}
 
 void Config::CalculateSize() {
     // calculate rank and re-calculate channel_size
@@ -65,10 +76,11 @@ void Config::CalculateSize() {
 DRAMProtocol Config::GetDRAMProtocol(std::string protocol_str) {
     std::map<std::string, DRAMProtocol> protocol_pairs = {
         {"DDR3", DRAMProtocol::DDR3},     {"DDR4", DRAMProtocol::DDR4},
-        {"GDDR5", DRAMProtocol::GDDR5},   {"GDDR5X", DRAMProtocol::GDDR5X},  {"GDDR6", DRAMProtocol::GDDR6},
-        {"LPDDR", DRAMProtocol::LPDDR},   {"LPDDR3", DRAMProtocol::LPDDR3},
-        {"LPDDR4", DRAMProtocol::LPDDR4}, {"HBM", DRAMProtocol::HBM},
-        {"HBM2", DRAMProtocol::HBM2},     {"HMC", DRAMProtocol::HMC}};
+        {"GDDR5", DRAMProtocol::GDDR5},   {"GDDR5X", DRAMProtocol::GDDR5X},
+        {"GDDR6", DRAMProtocol::GDDR6},   {"LPDDR", DRAMProtocol::LPDDR},
+        {"LPDDR3", DRAMProtocol::LPDDR3}, {"LPDDR4", DRAMProtocol::LPDDR4},
+        {"HBM", DRAMProtocol::HBM},       {"HBM2", DRAMProtocol::HBM2},
+        {"HMC", DRAMProtocol::HMC}};
 
     if (protocol_pairs.find(protocol_str) == protocol_pairs.end()) {
         std::cout << "Unkwown/Unsupported DRAM Protocol: " << protocol_str
@@ -110,7 +122,7 @@ void Config::InitDRAMParams() {
     // HMC specific parameters
     num_links = GetInteger("hmc", "num_links", 4);
     link_width = GetInteger("hmc", "link_width", 16);
-    link_speed = GetInteger("hmc", "link_speed", 15000);  //MHz
+    link_speed = GetInteger("hmc", "link_speed", 15000);  // MHz
     block_size = GetInteger("hmc", "block_size", 64);
     xbar_queue_depth = GetInteger("hmc", "xbar_queue_depth", 16);
     if (IsHMC()) {
@@ -128,9 +140,9 @@ void Config::InitDRAMParams() {
     } else if (protocol == DRAMProtocol::GDDR5X) {
         burst_cycle = (BL == 0) ? 0 : BL / 8;
         BL = (BL == 0) ? 8 : BL;
-    } else if (protocol == DRAMProtocol::GDDR6){
+    } else if (protocol == DRAMProtocol::GDDR6) {
         burst_cycle = (BL == 0) ? 0 : BL / 16;
-        BL = (BL == 0 ) ? 8 : BL;
+        BL = (BL == 0) ? 8 : BL;
     } else {
         burst_cycle = (BL == 0) ? 0 : BL / 2;
         BL = (BL == 0) ? (IsHBM() ? 4 : 8) : BL;

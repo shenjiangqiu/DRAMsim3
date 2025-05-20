@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.5)
 project(dramsim3)
 
 set(default_build_type "Release")
@@ -40,6 +40,9 @@ add_library(dramsim3 SHARED
     src/timing.cc
     src/memory_system.cc
 )
+
+add_executable(test test.cc)
+target_link_libraries(test dramsim3 inih)
 
 if (THERMAL)
     # dependency check
